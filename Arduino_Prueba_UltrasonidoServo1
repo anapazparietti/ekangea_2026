@@ -1,0 +1,55 @@
+#include <Servo.h>
+
+// Objeto flor
+Servo flor;
+
+// Pines para el sensor de sonido
+const int trigPin = 9; //envia señal (TRIG)
+const int echoPin = 10; //recibe señal (ECHO)
+
+// Variables distancia
+long duracion;
+int distancia;
+
+void setup() {
+
+// Configuraciones pines (envia o recibe señal) 
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+// Pin para el servo
+  flor.attach(3);
+
+  flor.write(0); // Flor cerrada (Posicion inicial) 
+
+  Serial.begin(9600);
+}
+
+void loop() {
+
+  // Enviar pulso ultrasónico (pulso corto)
+  digitalWrite(trigPin, LOW); // Apaga trig
+  delayMicroseconds(2);
+
+  digitalWrite(trigPin, HIGH); // Inicia trig 
+  delayMicroseconds(10);
+
+  digitalWrite(trigPin, LOW); // Apaga trig
+
+// Espera eco
+  duracion = pulseIn(echoPin, HIGH); 
+
+// Calcula distancia
+  distancia = duracion * 0.034 / 2;
+
+  Serial.println(distancia);
+
+// Si detecta abre la flor
+  if (distancia > 0 && distancia < 20) {
+    flor.write(120); // Abrir flor
+  } else {
+    flor.write(0);   // Cerrar flor
+  }
+
+  delay(100);
+}
