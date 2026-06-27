@@ -1,10 +1,12 @@
 #include <AccelStepper.h>
-#include <Servo.h>
 #include <NewPing.h>
 
 //STEPPERS---------------------------
 const int NUM_ZONAS = 4;
-int pasos_destino = 2048; 
+
+// Definimos la velocidad constante de giro continuo (pasos por segundo)
+// Positivo gira a un lado, negativo al otro (ej: -600)
+const int VELOCIDAD_CONTINUA = 600; 
 
 const int pines_motor[NUM_ZONAS][4] = {
   {22, 23, 24, 25}, // Bosque
@@ -20,13 +22,13 @@ AccelStepper motores[NUM_ZONAS] = {
   AccelStepper(AccelStepper::FULL4WIRE, pines_motor[3][0], pines_motor[3][2], pines_motor[3][1], pines_motor[3][3])
 };
 
-unsigned long tiempos_espera[NUM_ZONAS] = {0, 0, 0, 0};
-bool esperando[NUM_ZONAS] = {false, false, false, false};
+// QUINTO STEPPER GENERAL ------------------
+AccelStepper motor_general(AccelStepper::FULL4WIRE, 50, 52, 51, 53);
 
 
 //ULTRASONIDOS--------------------
 const int MaxDistance = 200;
-const int DISTANCIA_ACTIVACION = 30; 
+const int DISTANCIA_ACTIVACION = 10; 
 
 const int pines_sonar[NUM_ZONAS][2] = {
   {43, 42}, // Bosque
@@ -47,23 +49,15 @@ unsigned long tiempo_sensores = 0;
 const int INTERVALO_SENSORES = 120; 
 
 
-//SERVO-MOTOR-------------------
-Servo myservo;  
-int angulo_servo = 0; 
-
-
 //VOID SET UP--------------------------------
 void setup() {
   Serial.begin(9600);
 
-  myservo.attach(10);  
-  myservo.write(angulo_servo); 
-
+  // Para giro continuo con runSpeed(), solo necesitamos configurar setMaxSpeed
   for (int i = 0; i < NUM_ZONAS; i++) {
-    motores[i].setMaxSpeed(800);
-    motores[i].setAcceleration(300);
-    motores[i].setCurrentPosition(0);
+    motores[i].setMaxSpeed(1000);
   }
+  motor_general.setMaxSpeed(1000);
 }
 
 
@@ -78,52 +72,30 @@ void loop() {
     }
   }
 
-  // Bandera para el servo basada ESTRICTAMENTE en los sensores
   bool los_4_sensores_detectan = true;
 
-  //STEPPERS-----------------------
+  // LÓGICA DE LOS 4 STEPPERS INDIVIDUALES
   for (int i = 0; i < NUM_ZONAS; i++) {
     
-    // Evaluamos si el sensor detecta algo
     if (distancias[i] > 0 && distancias[i] <= DISTANCIA_ACTIVACION) {
-      
-      // Movimiento normal del stepper
-      if (motores[i].distanceToGo() == 0 && !esperando[i]) {
-        tiempos_espera[i] = millis();
-        esperando[i] = true;
-      }
-      if (esperando[i] && (millis() - tiempos_espera[i] >= 1000)) {
-        esperando[i] = false;
-        if (motores[i].currentPosition() == pasos_destino) {
-          motores[i].moveTo(0);
-        } else {
-          motores[i].moveTo(pasos_destino);
-        }
-      }
+      // Si detecta, le asignamos velocidad constante para que avance sin parar
+      motores[i].setSpeed(VELOCIDAD_CONTINUA);
+      motores[i].runSpeed();
     } else {
-      // Si el sensor no detecta, este motor se frena
-      motores[i].stop(); 
-      esperando[i] = false; 
-      
-      // Como este sensor no detecta, rompemos la condición para el servo
+      // Si no detecta, velocidad a 0 y frena de golpe
+      motores[i].setSpeed(0);
       los_4_sensores_detectan = false;
     }
-    
-    motores[i].run();
   }
 
 
-  //SERVO---------------------------------
-  // El servo responde directamente a la lectura limpia de los 4 sensores
+  // LÓGICA DEL QUINTO STEPPER GENERAL -----------------------
   if (los_4_sensores_detectan) {
-    if (angulo_servo != 180) {
-      angulo_servo = 180;
-      myservo.write(angulo_servo);
-    }
+    // Si los 4 están activos, gira continuamente
+    motor_general.setSpeed(VELOCIDAD_CONTINUA);
+    motor_general.runSpeed();
   } else {
-    if (angulo_servo != 0) {
-      angulo_servo = 0;
-      myservo.write(angulo_servo);
-    }
+    // Si falta uno solo, se detiene
+    motor_general.setSpeed(0);
   }
 }
