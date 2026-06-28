@@ -41,51 +41,62 @@ void draw() {
   text("Conteo dinámico de flores: " + floresActivasAnterior, 20, 50);
 }
 
-
 void serialEvent(Serial puerto) {
   String stringEntrada = puerto.readStringUntil('\n');
   
   if (stringEntrada != null) {
     stringEntrada = trim(stringEntrada);
     
-    // ─── MOSTRAR EN LA CONSOLA DE PROCESSING ───
-    // Esto hace que veas los carteles de "BOSQUE", "DESIERTO", etc., directo acá abajo.
-    println(stringEntrada); 
-    
-    // Intentamos convertir a número
+    // Convertimos el dato recibido en un número entero
     int floresActivasActual = int(stringEntrada);
     
-    // VALIDACIÓN: La lógica musical solo avanza si el dato es un número válido (0 al 4)
+    // VALIDACIÓN: Evitamos ruidos extraños del puerto serial
     if (floresActivasActual >= 0 && floresActivasActual <= 4) {
       
-      // CASO A: ALGUIEN SE ACERCA
+      // ─── CASO A: ALGUIEN SE ACERCA (El número de flores aumentó) ───
       if (floresActivasActual > floresActivasAnterior) {
+        // Determinamos qué nivel de sonido toca activar (0, 1, 2 o 3)
         int indexSonido = floresActivasActual - 1; 
+        
         if (indexSonido >= 0 && indexSonido < 4) {
-          sonidosActivar[indexSonido].play();
+          println("Se activó una flor. Nivel actual: " + floresActivasActual + " -> Play activar" + indexSonido + ".mp3");
+          sonidosActivar[indexSonido].play(); // Se reproduce en paralelo, NO corta los anteriores
         }
       }
       
-      // CASO B: ALGUIEN SE VA
+      // ─── CASO B: ALGUIEN SE VA (El número de flores disminuyó) ───
       else if (floresActivasActual < floresActivasAnterior) {
+        // Identificamos qué capa se tiene que apagar o qué sonido de cierre poner
         int indexSonido = floresActivasActual; 
+        
         if (indexSonido >= 0 && indexSonido < 4) {
+          println("Se cerró una flor. Nivel actual: " + floresActivasActual + " -> Play desactivar" + indexSonido + ".mp3");
+          
+          // Opcional: Si querés que la capa de activación deje de sonar al bajarse, descomentá la línea de abajo:
+          // sonidosActivar[indexSonido].stop(); 
+          
           sonidosDesactivar[indexSonido].play();
         }
       }
       
+      // Guardamos el estado para el próximo ciclo
       floresActivasAnterior = floresActivasActual;
       
-      // LÓGICA DEL 5TO MOTOR
+      // ─── 3. LÓGICA DEL 5TO MOTOR (Clímax de la instalación) ───
       boolean motorGeneralActual = (floresActivasActual == 4);
+      
       if (motorGeneralActual == true && motorGeneralAnterior == false) {
+        println("¡MÁXIMO CLÍMAX! 5to Motor ON -> Play especial.mp3");
         flor5Cierre.stop();
         sonidoEspecial.loop();
       }
+      
       if (motorGeneralActual == false && motorGeneralAnterior == true) {
+        println("El clímax terminó -> Play flor5Cierre.mp3");
         sonidoEspecial.stop();
         flor5Cierre.play();
       }
+      
       motorGeneralAnterior = motorGeneralActual;
     }
   }
