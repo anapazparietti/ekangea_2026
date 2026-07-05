@@ -5,11 +5,9 @@ Serial miPuerto;
 
 // Tus mismos arreglos de sonido
 SoundFile[] sonidosActivar = new SoundFile[4];
-SoundFile[] sonidosDesactivar = new SoundFile[4];
 
 SoundFile sonidoAmbiente;
 SoundFile sonidoEspecial;
-SoundFile flor5Cierre;
 
 // REGISTRO DE ESTADO
 int floresActivasAnterior = 0; 
@@ -25,12 +23,10 @@ void setup() {
   // Carga de sonidos (se mantiene igual)
   for (int i = 0; i < 4; i++) {
     sonidosActivar[i] = new SoundFile(this, "activar" + i + ".mp3");
-    sonidosDesactivar[i] = new SoundFile(this, "desactivar" + i + ".mp3");
   }
 
   sonidoAmbiente = new SoundFile(this, "ambiente.MP3"); 
   sonidoEspecial = new SoundFile(this, "especial.mp3");
-  flor5Cierre    = new SoundFile(this, "flor5Cierre.mp3");
 
   sonidoAmbiente.loop();
 }
@@ -75,7 +71,6 @@ void serialEvent(Serial puerto) {
           // Opcional: Si querés que la capa de activación deje de sonar al bajarse, descomentá la línea de abajo:
           // sonidosActivar[indexSonido].stop(); 
           
-          sonidosDesactivar[indexSonido].play();
         }
       }
       
@@ -87,14 +82,12 @@ void serialEvent(Serial puerto) {
       
       if (motorGeneralActual == true && motorGeneralAnterior == false) {
         println("¡MÁXIMO CLÍMAX! 5to Motor ON -> Play especial.mp3");
-        flor5Cierre.stop();
         sonidoEspecial.loop();
       }
       
       if (motorGeneralActual == false && motorGeneralAnterior == true) {
         println("El clímax terminó -> Play flor5Cierre.mp3");
         sonidoEspecial.stop();
-        flor5Cierre.play();
       }
       
       motorGeneralAnterior = motorGeneralActual;

@@ -26,7 +26,7 @@ AccelStepper motor_general(AccelStepper::FULL4WIRE, 50, 52, 51, 53);
 
 //ULTRASONIDOS--------------------
 const int MaxDistance = 200; 
-const int DISTANCIA_ACTIVACION = 10; 
+const int DISTANCIA_ACTIVACION = 15; 
 
 const int pines_sonar[NUM_ZONAS][2] = { 
   {43, 42}, // Bosque
