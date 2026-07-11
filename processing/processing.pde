@@ -1,3 +1,4 @@
+
 import processing.serial.*;
 import processing.sound.*;
 
@@ -15,13 +16,13 @@ void setup() {
   size(1000, 750, P2D);
   smooth(4);
 
-  /*
+
   //puerto de comunicación
    printArray(Serial.list());
    String portName = Serial.list()[0];
    miPuerto = new Serial(this, portName, 9600);
    miPuerto.bufferUntil('\n');//delimitador del flujo interrumpido de datos (bytes) que envía Arduino
-   */
+  
 
   for (int i = 0; i < sonidoActivar.length; i++) {
     sonidoActivar[i] = new SoundFile(this, "activar" + i + ".mp3");
@@ -77,6 +78,9 @@ void serialEvent(Serial p) {
             sonidoActivar[w].stop();
           };
         };
+        println();
+        println("el indice es" + indice);
+        
       };
     };
     contenidoActual = floresActivas;
@@ -90,6 +94,7 @@ void controlTeclado() {
     if (keyz[i]) {
       rect(posicion*100, width/2, 100, 50); // Se utiliza "posicion", no "i"
       posicion++; // Se incrementa solo cuando se dibuja un cuadrado
+      //miPuerto.write(i);
     };
   };
   text(posicion, 100, 120);
@@ -97,9 +102,9 @@ void controlTeclado() {
   //ESTADOS POR SONIDO (pensar en una caja, la cual va cambiando su contenido)
   if (posicion > contenidoActual) {
     int indice = posicion - 1; //no usar posición o contenidoActual, se pasa del limite del array
-    println();
+/*    println();
     println("indice es = " + indice);
-    println();
+    println();*/
     if (indice >= 0 && indice < sonidoActivar.length) {
       if (!sonidoActivar[indice].isPlaying()) {//para que no se repita
         sonidoActivar[indice].play();
@@ -107,7 +112,7 @@ void controlTeclado() {
     };
     //detener sonido anterior
     for (int j = 0; j < indice; j++) {
-      println("j es = " + j);
+      /*println("j es = " + j);*/
       if (sonidoActivar[j].isPlaying() || sonidoActivar[indice].isPlaying()) {
         sonidoActivar[j].stop();
       };
@@ -132,9 +137,3 @@ void keyReleased() {
   if (key == 'd')  keyz[2] = false;
   if (key == 'f')  keyz[3] = false;
 };
-
-/*
-void serialEvent(Serial miPuerto){
- 
- };
- */
